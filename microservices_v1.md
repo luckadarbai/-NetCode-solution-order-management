@@ -1,6 +1,8 @@
 ```mermaid
 flowchart LR
 
+flowchart LR
+
 A[Web Client (Customers)] --> G[API Gateway]
 B[Admin UI (Internal Staff)] --> G
 
