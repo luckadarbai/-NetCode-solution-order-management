@@ -1,0 +1,371 @@
+openapi: 3.0.3
+info:
+  title: Order Management System API
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com
+
+paths:
+
+  ############################################
+  # ORDER SERVICE
+  ############################################
+
+  /api/orders:
+    post:
+      summary: Create a new order
+      tags: [Orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+    get:
+      summary: Get user's orders
+      tags: [Orders]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: fromDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: toDate
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /api/orders/{orderId}:
+    get:
+      summary: Get order details
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+    patch:
+      summary: Update order partially (e.g., status)
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderPatchRequest'
+      responses:
+        '200':
+          description: Order updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/orders/{orderId}/events:
+    get:
+      summary: Get order events (status changes)
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderEvent'
+
+  /api/admin/orders:
+    get:
+      summary: Admin order list
+      tags: [Admin Orders]
+      responses:
+        '200':
+          description: List of orders for admin
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /api/admin/orders/{orderId}:
+    get:
+      summary: Admin order details
+      tags: [Admin Orders]
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details for admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+
+  ############################################
+  # USER SERVICE
+  ############################################
+
+  /api/users:
+    post:
+      summary: Create a new user
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/users/{userId}:
+    get:
+      summary: Get user profile
+      tags: [Users]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    patch:
+      summary: Update user profile
+      tags: [Users]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatchRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/admin/users:
+    get:
+      summary: Admin user list
+      tags: [Admin Users]
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /api/admin/users/{userId}:
+    patch:
+      summary: Admin updates user (including roles)
+      tags: [Admin Users]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAdminPatchRequest'
+      responses:
+        '200':
+          description: User updated by admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      summary: Delete or block user
+      tags: [Admin Users]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+
+
+components:
+  schemas:
+
+    ############################################
+    # ORDER SCHEMAS
+    ############################################
+
+    OrderCreateRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: string
+        comment:
+          type: string
+        deliveryAddress:
+          type: string
+      required: [items]
+
+    OrderPatchRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [submitted, processing, completed, cancelled]
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        items:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderEvent'
+
+    OrderEvent:
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+
+    ############################################
+    # USER SCHEMAS
+    ############################################
+
+    UserCreateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+      required: [email, password]
+
+    UserPatchRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+
+    UserAdminPatchRequest:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
